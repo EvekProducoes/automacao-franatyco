@@ -20,12 +20,9 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 # --- 2. BUSCAR TÓPICO DE GAMES ---
 def fetch_gaming_topic():
-    """Busca a principal manchete da categoria 'entretenimento' no Brasil."""
     print("Buscando manchete de Entretenimento/Games no Brasil...")
-    
     category = "entertainment"
     url = f'https://gnews.io/api/v4/top-headlines?category={category}&lang=pt&country=br&max=1&apikey={GNEWS_API_KEY}'
-    
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -41,25 +38,11 @@ def fetch_gaming_topic():
         print(f"ERRO ao buscar notícias de entretenimento: {e}")
         return None
 
-# --- 3. BUSCAR IMAGEM RELEVANTE ---
+# --- 3. BUSCAR IMAGEM (MODIFICADO PARA TESTE FINAL) ---
 def get_image_url(query):
-    if not query: return None
-    print(f"Buscando imagem para '{query}' no Pexels...")
-    url = f'https://api.pexels.com/v1/search?query={query}&per_page=1&orientation=landscape'
-    headers = {'Authorization': PEXELS_API_KEY}
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        photos = response.json().get('photos')
-        if photos:
-            image_url = photos[0]['src']['large']
-            print(f"Imagem encontrada: {image_url}")
-            return image_url
-    except requests.exceptions.RequestException as e:
-        print(f"ERRO ao buscar imagem: {e}")
-    
-    print("Nenhuma imagem encontrada para o tópico. Usando imagem de contingência.")
-    return "https://images.pexels.com/photos/159393/game-machine-arcade-machine-children-s-games-159393.jpeg"
+    # Ignora a busca no Pexels e usa uma imagem de teste 100% confiável.
+    print("Usando URL de imagem fixa para o teste final.")
+    return "https://i.imgur.com/gKCHyGg.png"
 
 # --- 4. GERAR CONTEÚDO DO POST ---
 def generate_facebook_post(topic):
