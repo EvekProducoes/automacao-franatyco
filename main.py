@@ -17,39 +17,39 @@ except KeyError as e:
 genai.configure(api_key=GEMINI_API_KEY)
 
 
-# --- 2. BUSCAR TÓPICO E LINK DE GAMES ---
+# --- 2. BUSCAR TÓPICO (VERSÃO FINAL COM BUSCA DIRETA) ---
 def fetch_gaming_topic():
-    """Busca a principal manchete e seu link da categoria 'entretenimento' no Brasil."""
-    print("Buscando manchete de Entretenimento/Games no Brasil...")
+    """Busca notícias de games no Brasil usando uma busca por palavra-chave."""
+    print("Buscando notícias de games no Brasil via busca direta...")
     
-    category = "entertainment"
-    url = f'https://gnews.io/api/v4/top-headlines?category={category}&lang=pt&country=br&max=1&apikey={GNEWS_API_KEY}'
+    # Usando o endpoint de busca para mais relevância
+    query = '"lançamento de jogo" OR "games"'
+    url = f'https://gnews.io/api/v4/search?q={query}&lang=pt&country=br&max=10&apikey={GNEWS_API_KEY}'
     
     try:
         response = requests.get(url)
         response.raise_for_status()
         articles = response.json().get('articles')
-        if articles and articles[0].get('title') and articles[0].get('url'):
-            topic = articles[0]['title']
-            article_url = articles[0]['url']
-            # Filtro para garantir que a notícia seja sobre games
-            if 'jogo' in topic.lower() or 'game' in topic.lower() or 'console' in topic.lower() or 'playstation' in topic.lower() or 'xbox' in topic.lower() or 'nintendo' in topic.lower():
+        if articles:
+            # Pega o primeiro artigo da lista
+            first_article = articles[0]
+            topic = first_article.get('title')
+            article_url = first_article.get('url')
+            if topic and article_url:
                 print(f"Tópico de games encontrado: {topic}")
                 print(f"URL da notícia: {article_url}")
                 return topic, article_url
-            else:
-                 print(f"Tópico de entretenimento encontrado, mas não é sobre games: {topic}. Ignorando.")
     except requests.exceptions.RequestException as e:
-        print(f"ERRO ao buscar notícias: {e}")
+        print(f"ERRO ao buscar notícias de games: {e}")
 
-    print("Nenhum tópico específico de games encontrado. Rotina encerrada.")
+    print("Nenhum tópico de games encontrado na busca de hoje.")
     return None, None
 
 # --- 3. BUSCAR IMAGEM RELEVANTE ---
 def get_image_url(query):
     if not query: return None
     print(f"Buscando imagem para '{query}' no Pexels...")
-    url = f'https://api.pexels.com/v1/search?query={query}&per_page=1&orientation=landscape'
+    url = f'https://api.pexels.com/v1/search?query=games&q={query}&per_page=1&orientation=landscape'
     headers = {'Authorization': PEXELS_API_KEY}
     try:
         response = requests.get(url, headers=headers)
@@ -89,14 +89,13 @@ def generate_facebook_post(topic, article_url):
         print(f"ERRO ao gerar conteúdo com o Gemini: {e}")
         return None
 
-# --- 5. PUBLICAR NO FACEBOOK (MÉTODO CORRETO E FINAL) ---
+# --- 5. PUBLICAR NO FACEBOOK ---
 def post_to_facebook(message, image_url):
     if not message or not image_url:
         print("Conteúdo ou imagem faltando, publicação cancelada.")
         return
     
     post_url = f'https://graph.facebook.com/{FACEBOOK_PAGE_ID}/photos'
-    
     payload = {
         'caption': message,
         'url': image_url,
