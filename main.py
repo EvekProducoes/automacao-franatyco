@@ -32,15 +32,18 @@ def fetch_gaming_topic():
         if articles and articles[0].get('title') and articles[0].get('url'):
             topic = articles[0]['title']
             article_url = articles[0]['url']
-            print(f"Tópico de entretenimento encontrado: {topic}")
-            print(f"URL da notícia: {article_url}")
-            return topic, article_url
-        else:
-            print(f"Nenhum artigo de '{category}' encontrado hoje.")
-            return None, None
+            # Filtro para garantir que a notícia seja sobre games
+            if 'jogo' in topic.lower() or 'game' in topic.lower() or 'console' in topic.lower() or 'playstation' in topic.lower() or 'xbox' in topic.lower() or 'nintendo' in topic.lower():
+                print(f"Tópico de games encontrado: {topic}")
+                print(f"URL da notícia: {article_url}")
+                return topic, article_url
+            else:
+                 print(f"Tópico de entretenimento encontrado, mas não é sobre games: {topic}. Ignorando.")
     except requests.exceptions.RequestException as e:
-        print(f"ERRO ao buscar notícias de entretenimento: {e}")
-        return None, None
+        print(f"ERRO ao buscar notícias: {e}")
+
+    print("Nenhum tópico específico de games encontrado. Rotina encerrada.")
+    return None, None
 
 # --- 3. BUSCAR IMAGEM RELEVANTE ---
 def get_image_url(query):
@@ -71,7 +74,7 @@ def generate_facebook_post(topic, article_url):
     Você é um criador de conteúdo para a página de games "Franatyco".
     Sua tarefa é criar um post para o Facebook, curto e empolgante, sobre a seguinte notícia do mundo dos games: "{topic}".
     O post deve ter um tom casual e divertido, como se estivesse conversando com outros gamers. Inclua 2 ou 3 emojis relevantes 🎮🔥.
-    No final do post, adicione uma chamada para ação como "Confira a matéria completa:" e então insira a URL da notícia.
+    No final do post, adicione uma chamada para ação como "Confira a matéria completa na fonte:" e então insira a URL da notícia.
     Termine com 3 hashtags relevantes como #Games, #GamingBrasil e uma terceira relacionada ao jogo ou console da notícia.
 
     A URL da notícia para incluir no final é: {article_url}
@@ -86,22 +89,22 @@ def generate_facebook_post(topic, article_url):
         print(f"ERRO ao gerar conteúdo com o Gemini: {e}")
         return None
 
-# --- 5. PUBLICAR NO FACEBOOK (USANDO O ENDPOINT /FEED) ---
+# --- 5. PUBLICAR NO FACEBOOK (MÉTODO CORRETO E FINAL) ---
 def post_to_facebook(message, image_url):
     if not message or not image_url:
         print("Conteúdo ou imagem faltando, publicação cancelada.")
         return
     
-    post_url = f'https://graph.facebook.com/{FACEBOOK_PAGE_ID}/feed'
+    post_url = f'https://graph.facebook.com/{FACEBOOK_PAGE_ID}/photos'
     
     payload = {
-        'message': message,
-        'link': image_url, # Usando a imagem como um link preview
+        'caption': message,
+        'url': image_url,
         'access_token': FACEBOOK_ACCESS_TOKEN
     }
     
     try:
-        print("Publicando no Facebook...")
+        print("Publicando no Facebook (usando o endpoint /photos)...")
         response = requests.post(post_url, data=payload)
         response.raise_for_status()
         print(">>> SUCESSO! Post publicado na Página do Facebook.")
